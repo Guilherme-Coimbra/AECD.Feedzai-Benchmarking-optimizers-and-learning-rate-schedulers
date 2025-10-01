@@ -108,7 +108,17 @@ Then **freeze** them:
 pip freeze --exclude-editable > requirements.txt
 ```
 
-### 5) Fetch datasets
+### 5) Install the project package
+
+Activate your virtual environment (or ensure the notebook kernel points to it), then install the `src/` modules in editable mode so notebooks and scripts can import them without changing `sys.path`:
+
+```bash
+python -m pip install -e .
+```
+
+Re-run this command only if `pyproject.toml` changes; package code updates are picked up automatically in editable mode.
+
+### 6) Fetch datasets
 
 Follow the dataset download and extraction instructions in [data/README.md](data/README.md).
 
@@ -129,7 +139,8 @@ pip freeze --exclude-editable > requirements.txt
 rm -rf .venv
 python -m venv .venv
 source .venv/bin/activate  # (Windows: .venv\Scripts\Activate.ps1)
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ---

@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aecd-benchmark"
+version = "0.1.0"
+description = "Utilities and experiments for benchmarking optimizers and learning rate schedulers."
+readme = "README.md"
+authors = [{ name = "AECD Team" }]
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["src"]
