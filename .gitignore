@@ -209,6 +209,8 @@ __marimo__/
 # Dataset artifacts
 data/bank-account-fraud-dataset-neurips-2022.zip
 data/bank-account-fraud-dataset-neurips-2022/
+data/processed/*
+
 
 
 # Data Exploration CSVs and Images
