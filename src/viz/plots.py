@@ -6,7 +6,13 @@ from typing import Dict, Iterable, List, Optional
 
 import matplotlib.pyplot as plt
 
-__all__ = ["plot_loss", "plot_metric", "plot_many_metrics"]
+__all__ = [
+    "plot_loss",
+    "plot_metric",
+    "plot_many_metrics",
+    "plot_roc_from_scores",
+    "plot_precision_recall_k",
+]
 
 
 def plot_loss(history: Dict[str, Iterable[float]], title: str = "Loss"):
@@ -112,6 +118,74 @@ def plot_many_metrics(history: Dict[str, Iterable[float]], keys: List[str], titl
 def _infer_epochs(history: Dict[str, Iterable[float]]):
     longest = max((len(values) for values in history.values()), default=0)
     return list(range(1, longest + 1))
+
+
+def plot_roc_from_scores(y_true, y_score, *, from_logits: bool = False, title: str = "ROC Curve"):
+    """Compute and plot the ROC curve from binary scores.
+
+    Args:
+        y_true: 1D array-like of ground-truth labels {0,1}.
+        y_score: 1D array-like of scores (probabilities or logits).
+        from_logits: If True, applies sigmoid to scores.
+        title: Figure title.
+
+    Returns:
+        Matplotlib figure. The legend includes the AUC value.
+    """
+
+    import torch
+    from src.training.metrics import roc_curve_binary, roc_auc_binary
+
+    y_t = torch.as_tensor(list(y_true), dtype=torch.long).view(-1)
+    y_s = torch.as_tensor(list(y_score), dtype=torch.float).view(-1)
+    fpr, tpr, _ = roc_curve_binary(y_t, y_s, from_logits=from_logits)
+    auc = roc_auc_binary(fpr, tpr)
+
+    fig, ax = plt.subplots()
+    ax.plot(fpr.numpy(), tpr.numpy(), label=f"ROC (AUC = {auc:.3f})")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", alpha=0.6, label="Chance")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.set_title(title)
+    ax.grid(True, linestyle="--", alpha=0.5)
+    ax.legend()
+    fig.tight_layout()
+    return fig
+
+
+def plot_precision_recall_k(y_true, y_score, ks, *, from_logits: bool = False, title: str = "Precision/Recall @k"):
+    """Plot Precision@k and Recall@k across a list of k.
+
+    Args:
+        y_true: 1D labels {0,1}.
+        y_score: 1D scores (probabilities or logits).
+        ks: Iterable of k values; ints or fractions in (0,1] for top-k%.
+        from_logits: If True, applies sigmoid to scores before ranking.
+        title: Figure title.
+
+    Returns:
+        Matplotlib figure.
+    """
+
+    import torch
+    from src.training.metrics import precision_recall_at_k
+
+    y_t = torch.as_tensor(list(y_true), dtype=torch.long).view(-1)
+    y_s = torch.as_tensor(list(y_score), dtype=torch.float).view(-1)
+    k_vals, p_at_k, r_at_k = precision_recall_at_k(y_t, y_s, list(ks), from_logits=from_logits)
+
+    fig, ax = plt.subplots()
+    ax.plot(k_vals.numpy(), p_at_k.numpy(), marker="o", label="Precision@k")
+    ax.plot(k_vals.numpy(), r_at_k.numpy(), marker="s", label="Recall@k")
+    ax.set_xlabel("k (absolute count)")
+    ax.set_ylabel("Score")
+    ax.set_title(title)
+    ax.grid(True, linestyle="--", alpha=0.5)
+    ax.legend()
+    fig.tight_layout()
+    return fig
 
 
 if __name__ == "__main__":
