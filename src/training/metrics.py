@@ -10,6 +10,9 @@ from typing import Any, Callable, Optional, Sequence, Tuple, Union
 import torch
 import torch.nn.functional as F
 from torch import Tensor
+from sklearn.metrics import roc_curve
+import numpy as np
+
 
 __all__ = [
     "get_loss_fn",
@@ -27,6 +30,22 @@ __all__ = [
     "precision_recall_at_k",
 ]
 
+
+def recall_at_FPR( y_true: Tensor, y_score: Tensor, fpr_target: float) -> float:
+    """Compute recall at a specified false positive rate (FPR) threshold.
+
+    Args:
+        y_true: 1D tensor with binary ground-truth labels {0,1}.
+        y_score: 1D tensor with predicted scores; probabilities in [0,1] or raw logits.
+        fpr_target: Target FPR threshold in [0,1].
+
+    Returns:
+        Recall at the specified FPR threshold.
+    """
+    # Get FPR, TPR, thresholds
+    fpr, tpr, thresholds = roc_curve(y_true.numpy(), y_score.numpy())
+    idx = np.argmin(np.abs(fpr - fpr_target))
+    return float(tpr[idx])
 
 def get_loss_fn(task: str, **kwargs: Any) -> Callable[[Tensor, Tensor], Tensor]:
     """Return a standard PyTorch loss function for the given task.
